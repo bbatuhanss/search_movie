@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/movie_service.dart';
 import 'movie/movie_card_widget.dart';
 import '../models/movie.dart';
-import '../services/api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MainPage extends ConsumerStatefulWidget {

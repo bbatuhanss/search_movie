@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/movie.dart';
+import '../movie_detail/detail_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import '../main_page.dart';
@@ -14,7 +15,7 @@ class CardWidget extends ConsumerStatefulWidget {
 }
 
 final pageNumberProvider =
-    ChangeNotifierProvider((ref) => PageNumberNotifier());
+ChangeNotifierProvider((ref) => PageNumberNotifier());
 
 class PageNumberNotifier extends ChangeNotifier {
   int pageNumber = 1;
@@ -71,32 +72,32 @@ class _CardWidgetState extends ConsumerState<CardWidget> {
           height: 600,
           child: Stack(children: [
             if (ref.watch(loadingProvider).isLoading == false && ref.watch(movieProvider).movieList.isEmpty)
-               buildNotFoundArea("There are currently no movies to be shown. Please search for movies by searching"),
+              buildNotFoundArea("There are currently no movies to be shown. Please search for movies by searching"),
             if (ref.watch(movieProvider).movieList.isNotEmpty)
               CustomScrollView(
-                cacheExtent: 3000,
-                controller: scrollController,
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.all(20.0),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 180,
-                        mainAxisSpacing: 20,
-                        crossAxisSpacing: 20,
-                        childAspectRatio: 4.0,
-                        mainAxisExtent: 180,
-                      ),
-                      delegate: SliverChildListDelegate(
-                        [
-                          for (var item in ref.watch(movieProvider).movieList)
-                            buildCard(item)
-                        ],
+                  cacheExtent: 3000,
+                  controller: scrollController,
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.all(20.0),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 180,
+                          mainAxisSpacing: 20,
+                          crossAxisSpacing: 20,
+                          childAspectRatio: 4.0,
+                          mainAxisExtent: 180,
+                        ),
+                        delegate: SliverChildListDelegate(
+                          [
+                            for (var item in ref.watch(movieProvider).movieList)
+                              buildCard(item)
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ]),
+                  ]),
             if (ref.watch(loadingProvider).isLoading == true)
               const Center(
                 child: SizedBox(
@@ -132,6 +133,12 @@ class _CardWidgetState extends ConsumerState<CardWidget> {
       constraints: const BoxConstraints(maxHeight: 195, maxWidth: 155),
       child: GestureDetector(
         onTap: () {
+          ref.read(loadingProvider).setLoading(true);
+          Navigator.of(context).push(PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                DetailPage(movieId: movie.movieId, movieTitle: movie.title ?? "",),
+            transitionDuration: Duration.zero,
+          ));
         },
         child: ClipRRect(
           borderRadius: const BorderRadius.all(Radius.circular(10.0)),
@@ -144,13 +151,13 @@ class _CardWidgetState extends ConsumerState<CardWidget> {
                     aspectRatio: 180 / 140,
                     child: movie.posterPath != null
                         ? Image.network(
-                            "http://image.tmdb.org/t/p/w500/" +
-                                movie.posterPath!.toString(),
-                            fit: BoxFit.contain)
+                        "http://image.tmdb.org/t/p/w500/" +
+                            movie.posterPath!.toString(),
+                        fit: BoxFit.contain)
                         : Image.asset(
-                          'assets/images/no_image.png',
-                            fit: BoxFit.cover,
-                          ),
+                      'assets/images/no_image.png',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                   Positioned(
                     bottom: 4,
