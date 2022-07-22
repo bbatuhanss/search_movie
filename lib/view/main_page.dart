@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/movie_service.dart';
+import 'movie/movie_card_widget.dart';
 import '../models/movie.dart';
+import '../services/api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MainPage extends ConsumerStatefulWidget {
@@ -48,24 +51,28 @@ class _MainPageState extends ConsumerState<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 2,
-        toolbarHeight: 80,
-        backgroundColor: Colors.orange.withOpacity(0.6),
-        automaticallyImplyLeading: false,
-        title: Theme(
-          data: Theme.of(context).copyWith(
-            hoverColor: Colors.transparent,
-          ),
-          child: SizedBox(
-            width: 350,
-            child: buildSearch(),
+        appBar: AppBar(
+          elevation: 2,
+          toolbarHeight: 80,
+          backgroundColor: Colors.orange.withOpacity(0.6),
+          automaticallyImplyLeading: false,
+          title: Theme(
+            data: Theme.of(context).copyWith(
+              hoverColor: Colors.transparent,
+            ),
+            child: SizedBox(
+              width: 350,
+              child: buildSearch(),
+            ),
           ),
         ),
-      ),
-      body: Container(
-
-      )
+        body: CardWidget(
+          searchAction: (value) {
+            if (value == true) {
+              getMovieList(searchController.text);
+            }
+          },
+        )
     );
   }
 
@@ -96,7 +103,7 @@ class _MainPageState extends ConsumerState<MainPage> {
                 alignLabelWithHint: false,
                 focusedBorder: OutlineInputBorder(
                   borderSide:
-                      const BorderSide(color: Color(0xffE5E5E5), width: 1.0),
+                  const BorderSide(color: Color(0xffE5E5E5), width: 1.0),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 filled: true,
@@ -121,6 +128,7 @@ class _MainPageState extends ConsumerState<MainPage> {
                       moviesList = [];
                       searchController.text = '';
                       ref.read(movieProvider).setMovie([]);
+                      ref.read(pageNumberProvider).setPageNumber(1);
                     });
                   },
                 ),
@@ -129,6 +137,7 @@ class _MainPageState extends ConsumerState<MainPage> {
               onChanged: (value) {
                 setState(() {
                   moviesList = [];
+                  ref.read(pageNumberProvider).setPageNumber(1);
                   // searchText'i value ile kontrol etmemin sebebi value'nun length'i 2 den büyük olduğu durumlarda sadece bir kere girmesini sağlamak içindir.
                   //Çünkü TextFormField onChanged de birden fazla girip servisi bir den fazla call ediyor. Böyle bir bug var flutterın issueslarda açılmış ancak bir çözüm yapılmamış.
                   //https://github.com/flutter/flutter/issues/50163 hata bu adreste.
@@ -152,10 +161,13 @@ class _MainPageState extends ConsumerState<MainPage> {
       setState(() {
         searctText = query;
       });
-      List<Movie> movieList = await MovieService().getSearchMovie(query,1);
+      ref.read(loadingProvider).setLoading(true);
+      List<Movie> movieList = await MovieService().getSearchMovie(query,ref.read(pageNumberProvider).pageNumber);
       moviesList = [...moviesList, ...movieList];
       ref.read(movieProvider).setMovie(moviesList);
+      ref.read(loadingProvider).setLoading(false);
     } catch (err) {
+      ref.read(loadingProvider).setLoading(false);
       print(err);
     }
   }
